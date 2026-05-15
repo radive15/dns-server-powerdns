@@ -6,8 +6,11 @@ CREATE TABLE domains (
   last_check      INT DEFAULT NULL,
   type            TEXT NOT NULL,
   notified_serial BIGINT DEFAULT NULL,
-  account         VARCHAR(40) DEFAULT NULL
+  account         VARCHAR(40) DEFAULT NULL,
+  options         TEXT DEFAULT NULL,
+  catalog         TEXT DEFAULT NULL
 );
+
 CREATE UNIQUE INDEX name_index ON domains(name);
 
 -- Tabel utama: menyimpan semua DNS record (A, CNAME, MX, TXT, dll)
