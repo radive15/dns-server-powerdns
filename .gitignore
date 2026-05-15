@@ -1,0 +1,13 @@
+# Credentials — JANGAN pernah commit file ini
+.env
+
+# Docker volumes data (kalau mount local)
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp

@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+
+  # === SERVICE 1: PostgreSQL — Backend database untuk PowerDNS ===
+  postgres:
+    image: postgres:15-alpine          # alpine = image lebih kecil, cocok untuk production
+    container_name: pdns-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}       # dibaca dari file .env
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data              # data persistent
+      - ./config/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql  # auto-run saat pertama kali
+    networks:
+      - pdns_network
+    healthcheck:                         # PowerDNS hanya start setelah postgres benar-benar siap
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # === SERVICE 2: PowerDNS Authoritative Server ===
+  pdns:
+    image: powerdns/pdns-auth-49:latest
+    container_name: pdns-server
+    depends_on:
+      postgres:
+        condition: service_healthy      # tunggu postgres sehat dulu sebelum start
+    command:
+      # Backend: gunakan PostgreSQL
+      - "--launch=gpgsql"
+      - "--gpgsql-host=postgres"        # nama service di Docker network
+      - "--gpgsql-port=5432"
+      - "--gpgsql-dbname=${POSTGRES_DB}"
+      - "--gpgsql-user=${POSTGRES_USER}"
+      - "--gpgsql-password=${POSTGRES_PASSWORD}"
+      # REST API (akan dipakai Python CLI di Tahap 2)
+      - "--api=yes"
+      - "--api-key=${PDNS_API_KEY}"
+      - "--webserver=yes"
+      - "--webserver-address=0.0.0.0"
+      - "--webserver-port=8081"
+      - "--webserver-allow-from=0.0.0.0/0"
+      # Logging
+      - "--loglevel=5"
+      - "--log-dns-queries=yes"
+    ports:
+      - "53:53/udp"    # DNS queries (UDP — lebih dari 99% traffic DNS)
+      - "53:53/tcp"    # DNS queries (TCP — untuk response > 512 bytes)
+      - "8081:8081"    # REST API & web console
+    networks:
+      - pdns_network
+    restart: unless-stopped
+
+# Network internal antar container
+networks:
+  pdns_network:
+    driver: bridge
+
+# Volume persistent untuk data PostgreSQL
+volumes:
+  postgres_data:
