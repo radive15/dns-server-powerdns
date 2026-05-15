@@ -51,6 +51,26 @@ services:
     networks:
       - pdns_network
     restart: unless-stopped
+  # === SERVICE 2: PowerDNS Authoritative Server ===
+  pdns-admin:
+    image: powerdnsadmin/pda-legacy:latest
+    container_name: pdns-admin
+    depends_on:
+      - pdns
+    environment:
+      SECRET_KEY: ${PDNS_ADMIN_SECRET}
+      SQLALCHEMY_DATABASE_URI: sqlite:////data/pda.db
+      PDNS_HOST: pdns
+      PDNS_PORT: 8081
+      PDNS_API_KEY: ${PDNS_API_KEY}
+    volumes:
+      - pdns_admin_data:/data
+    ports:
+      - "9191:80"
+    networks:
+      - pdns_network
+    restart: unless-stopped
+
 
 networks:
   pdns_network:
@@ -58,3 +78,4 @@ networks:
 
 volumes:
   postgres_data:
+  pdns_admin_data:

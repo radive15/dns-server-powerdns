@@ -32,18 +32,7 @@ Project ini dibuat sebagai portofolio SRE/DevOps — mendemonstrasikan kemampuan
 
 ---
 
-## Prasyarat
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) sudah terinstall dan berjalan
-- Port `53` dan `8081` tersedia di mesin host
-- Git
-
-> **Pengguna Windows:** Jalankan perintah ini jika port 53 sudah terpakai oleh Windows DNS Client:
-> ```powershell
-> Stop-Service -Name "Dns" -Force
-> ```
-
----
 
 ## Struktur Folder
 
